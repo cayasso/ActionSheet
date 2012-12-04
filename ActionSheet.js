@@ -1,4 +1,26 @@
 enyo.kind({
+	name: 'ActionSheetContent',
+	tag: null,
+	layoutKind: 'enyo.FittableColumnsLayout',
+	published: {
+		actions: "",
+		title: "hooool"
+	},
+	components: [{
+		name: "actionSheetWrapper", classes: 'wrapper',  components: [
+			{name: "actionSheetTitle", classes: "actionsheet-title", content: "Select action"},
+			{name: "client", classes: "actionsheet-content", components: [
+				//{kind: onyx.Button, content: "Cancel", style: "background-color: #CCC; height: 60px; width: 100%;", edge: "left"}
+			]}
+		]
+	}],
+	titleChanged: function () {
+		this.$.actionSheetTitle.setContent(this.title);
+		this.$.actionSheetTitle.setShowing(!!this.title);
+	}
+});
+
+enyo.kind({
 	name: "ActionSheet",
 	kind: "onyx.Popup",
 	centered: false,
@@ -9,7 +31,7 @@ enyo.kind({
 	edge: "bottom",
 	classes: "actionsheet enyo-unselectable",
 	actionSheetOpened: false,
-	autoHide: true,
+	//autoHide: true,
 	published: {
 		actions: "",
 		hideOnAction: true,
@@ -21,6 +43,7 @@ enyo.kind({
 		onOpen: ""
 	},
 	create: function () {
+		this.actionQueue = null;
 		this.inherited(arguments);
 		this.titleChanged();
 	},
@@ -31,9 +54,7 @@ enyo.kind({
 		this.removeClass("vertical");
 		this.createClient();
 		this.addClass(this.edge);
-		this.$.actionSheetWrapper.setLayoutKind(enyo.FittableColumnsLayout);
 		this.addClass("horizontal");
-		this.$.slider.setLayoutKind(enyo.FittableRowsLayout);
 		this.inherited(arguments);
 	},
 	rendered: function () {
@@ -42,30 +63,31 @@ enyo.kind({
 	},
 	createClient: function () {
 		var owner = this.getInstanceOwner();
-		var components = [];
 		if (this.$.slider) {
 			this.destroyClientControls();
+			this.destroyClientControls();
 		}
-		this.createComponent({
-			name: 'slider', onAnimateFinish: 'animateFinished', ontap: "executeAction",
-			kind: enyo.Slideable, overMoving: false, classes: "slider enyo-stretch"
+		var slider = this.createComponent({
+			name: 'slider',
+			kind: enyo.Slideable,
+			classes: "slider enyo-stretch",
+			onAnimateFinish: 'animateFinished',
+			layoutKind: 'enyo.FittableColumnsLayout',
+			overMoving: false,
+			owner: this
 		});
-		components = [{
-			name: "actionSheetWrapper",  components: [
-			{name: "actionSheetTitle", classes: "actionsheet-title"}, {tag: "br"},
-			{name: "contentComponents", components: this.actions /*owner: owner*/}]
-		}];
-		this.$.slider.destroyClientControls();
-		this.$.slider.createComponents(components, {owner: this});
-		this.$.slider.resized();
+		slider.destroyClientControls();
+		slider.createComponent({
+			name: 'actionsheet',
+			kind: 'ActionSheetContent',
+			components: this.actions,
+			ontap: 'executeAction',
+			owner: this
+		});
+		slider.resized();
 	},
 	titleChanged: function () {
-		if (this.title) {
-			this.$.actionSheetTitle.setContent(this.title);
-			this.$.actionSheetTitle.setShowing(true);
-		} else {
-			this.$.actionSheetTitle.setShowing(false);
-		}
+		this.$.actionsheet.setTitle(this.title);
 	},
 	setSlider: function () {
 		var slider = this.$.slider;
@@ -73,26 +95,44 @@ enyo.kind({
 		var width = node.clientWidth;
 		var height = node.clientHeight;
 		var axis, unit, min, max;
-		axis = 'v';
-		unit = 'px';
-		max = 0;
-		min = height + 10;
-		value = min;
+		if (this.edge === 'top') {
+			axis = 'v';
+			max = 10;
+			min = -150;
+			value = -150;
+		} else if (this.edge === 'bottom') {
+			axis = 'v';
+			max = 40;
+			min = 250;
+			value = 250;
+		}  else if (this.edge === 'left') {
+			axis = 'h';
+			max = 0;
+			min = -150;
+			value = -150;
+		} else if (this.edge === 'right') {
+			axis = 'h';
+			max = 0;
+			min = 150;
+			value = 150;
+		}
+		slider.setProperty('unit', '%');
 		slider.setProperty('axis', axis);
-		slider.setProperty('unit', unit);
 		slider.setProperty('min', min);
 		slider.setProperty('max', max);
 		slider.setProperty('value', value);
 	},
 	executeAction: function (inSource, inEvent) {
-		/*if (this.autoHide) {
-			this.close(inSource, inEvent);
-		}*/
 		if (inEvent.target.tagName === 'BUTTON') {
-			this.$.slider.animateToMin();
-			this.doAction(inEvent);
-			this.hideOnAction && this.close(inSource, inEvent);
-			//return true;
+			this.action = inEvent.dispatchTarget.name;
+			if (this.hideOnAction) {
+				this.$.slider.animateToMin();
+			} else {
+				if (this.action) {
+					enyo.asyncMethod(this, this.doAction, { action: this.action });
+					this.action = null;
+				}
+			}
 		}
 	},
 	close: function () {
@@ -109,6 +149,10 @@ enyo.kind({
 		} else {
 			this.show();
 			this.doOpen(this);
+		}
+		if (this.action) {
+			enyo.asyncMethod(this, this.doAction, { action: this.action });
+			this.action = null;
 		}
 		this.actionSheetOpened = !this.actionSheetOpened;
 	}
