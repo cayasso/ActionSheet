@@ -1,0 +1,82 @@
+.actionsheet {
+	overflow: hidden;
+	/*width: 99%;*/
+}
+
+.actionsheet.onyx-popup { 
+	/*margin: 0;
+	padding: 0;*/
+	background: none !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+.actionsheet.collapsed {
+	pointer-events: none;
+}
+
+.actionsheet.top {
+	top: 0;
+	right: 0;
+	left: 0;
+}
+
+.actionsheet.right {
+	top: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.actionsheet.bottom {
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+.actionsheet.left {
+	top: 0;
+	bottom: 0;
+	left: 0;
+}
+
+.actionsheet .slider {
+	background: none;
+	text-align: center;
+	padding: 5px;
+}
+
+.actionsheet.horizontal .slider {
+	width: 100%;
+}
+
+.actionsheet.vertical .slider {
+	height: 100%;
+}
+
+/* Enyo framework overrides */
+.actionsheet .enyo-fittable-columns-layout {
+	text-align: center;
+	overflow: hidden;
+}
+
+.actionsheet .enyo-fittable-columns-layout > div {
+	background-color: #C4E3FE;
+	width: 60%;
+	padding: 15px;
+	border: 2px solid #EEE;
+	border-radius: 4px;
+}
+.actionsheet .enyo-fittable-columns-layout button {
+	margin: 8px 10px;
+	width: 90% !important;
+	font-weight: bold;
+}
+.actionsheet .enyo-fittable-rows-layout > .enyo-tool-decorator {
+	vertical-align: middle;
+	display: block;
+	margin: 6px 0px;
+}
+.actionsheet .enyo-fittable-columns-layout > .actionsheet-title {
+	font-size: 18px;
+	font-weight: bold;
+	margin-bottom: 3px !important;
+}
