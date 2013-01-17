@@ -4,7 +4,7 @@ enyo.kind({
 	layoutKind: 'enyo.FittableColumnsLayout',
 	published: {
 		actions: "",
-		title: "hooool"
+		title: ""
 	},
 	components: [{
 		name: "actionSheetWrapper", classes: 'wrapper',  components: [
@@ -33,14 +33,18 @@ enyo.kind({
 	actionSheetOpened: false,
 	//autoHide: true,
 	published: {
-		actions: "",
-		hideOnAction: true,
-		title: ""
+		title: "",
+		actions: [],
+		autoClose: false,
+		hideOnAction: true
 	},
 	events: {
-		onAction: "",
+		onOpen: "",
 		onClose: "",
-		onOpen: ""
+		onAction: ""
+	},
+	handlers: {
+		onresize: "handleResize"
 	},
 	create: function () {
 		this.actionQueue = null;
@@ -65,7 +69,6 @@ enyo.kind({
 		var owner = this.getInstanceOwner();
 		if (this.$.slider) {
 			this.destroyClientControls();
-			this.destroyClientControls();
 		}
 		var slider = this.createComponent({
 			name: 'slider',
@@ -76,6 +79,10 @@ enyo.kind({
 			overMoving: false,
 			owner: this
 		});
+		this.actionsChanged();
+	},
+	actionsChanged: function () {
+		var slider = this.$.slider;
 		slider.destroyClientControls();
 		slider.createComponent({
 			name: 'actionsheet',
@@ -89,38 +96,36 @@ enyo.kind({
 	titleChanged: function () {
 		this.$.actionsheet.setTitle(this.title);
 	},
-	setSlider: function () {
+	setSlider: function (value) {
 		var slider = this.$.slider;
-		var node = slider.hasNode();
-		var width = node.clientWidth;
-		var height = node.clientHeight;
+		var d = this.getDimentions();
+		var o = {
+			top: { axis: 'v', max: d.ty,	min: -d.ph, unit: 'px'},
+			bottom: { axis: 'v', max: d.ty, min: d.ph, unit: 'px' },
+			left: { axis: 'h', max: d.tx, min: -d.pw, unit: 'px' },
+			right: { axis: 'h', max: d.tx, min: d.pw, unit: 'px' }
+		}[this.edge];
+		slider.setProperty('unit', o.unit);
+		slider.setProperty('axis', o.axis);
+		slider.setProperty('max', o.max);
+		slider.setProperty('min', o.min);
+		slider.setProperty('value', value || o.min);
+	},
+	handleResize: function () {
+		var value = this.$.slider.getProperty('value');
+		enyo.asyncMethod(this, "setSlider", value);
+	},
+	getDimentions: function () {
+		var popup = this.hasNode();
+		var pw = popup.clientWidth;
+		var ph = popup.clientHeight;
+		var node = this.$.slider.hasNode();
+		var w = node.clientWidth;
+		var h = node.clientHeight;
 		var axis, unit, min, max;
-		if (this.edge === 'top') {
-			axis = 'v';
-			max = 10;
-			min = -150;
-			value = -150;
-		} else if (this.edge === 'bottom') {
-			axis = 'v';
-			max = 40;
-			min = 250;
-			value = 250;
-		}  else if (this.edge === 'left') {
-			axis = 'h';
-			max = 0;
-			min = -150;
-			value = -150;
-		} else if (this.edge === 'right') {
-			axis = 'h';
-			max = 0;
-			min = 150;
-			value = 150;
-		}
-		slider.setProperty('unit', '%');
-		slider.setProperty('axis', axis);
-		slider.setProperty('min', min);
-		slider.setProperty('max', max);
-		slider.setProperty('value', value);
+		var ty = (ph - h) / 2;
+		var tx = (pw - w) / 2;
+		return { pw: pw, ph: ph, w: w, h: h, tx: tx, ty: ty };
 	},
 	executeAction: function (inSource, inEvent) {
 		if (inEvent.target.tagName === 'BUTTON') {
