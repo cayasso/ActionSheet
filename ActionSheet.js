@@ -28,7 +28,7 @@ enyo.kind({
 });
 
 enyo.kind({
-	name: "ActionSheet",
+	name: "jb.ActionSheet",
 	kind: "onyx.Popup",
 	centered: false,
 	modal: false,
