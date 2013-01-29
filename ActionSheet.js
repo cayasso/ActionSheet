@@ -6,17 +6,24 @@ enyo.kind({
 		actions: "",
 		title: ""
 	},
+	handlers: {
+		ondragstart: "stopDragPropagation",
+		ondrag: "stopDragPropagation"
+	},
 	components: [{
 		name: "actionSheetWrapper", classes: 'wrapper',  components: [
 			{name: "actionSheetTitle", classes: "actionsheet-title", content: "Select action"},
-			{name: "client", classes: "actionsheet-content", components: [
-				//{kind: onyx.Button, content: "Cancel", style: "background-color: #CCC; height: 60px; width: 100%;", edge: "left"}
-			]}
+			{name: "client", classes: "actionsheet-content"}
 		]
 	}],
 	titleChanged: function () {
 		this.$.actionSheetTitle.setContent(this.title);
 		this.$.actionSheetTitle.setShowing(!!this.title);
+	},
+	stopDragPropagation: function () {
+		// need this for canceling any drag event and
+		// avoiding a bug where the sheet will close
+		return true;
 	}
 });
 
@@ -27,7 +34,7 @@ enyo.kind({
 	modal: false,
 	floating: true,
 	scrim: true,
-	autoDismiss: false,
+	autoDismiss: true,
 	edge: "bottom",
 	classes: "actionsheet enyo-unselectable",
 	actionSheetOpened: false,
@@ -85,11 +92,11 @@ enyo.kind({
 		var slider = this.$.slider;
 		slider.destroyClientControls();
 		slider.createComponent({
+			owner: this,
 			name: 'actionsheet',
 			kind: 'ActionSheetContent',
-			components: this.actions,
 			ontap: 'executeAction',
-			owner: this
+			components: this.actions
 		});
 		slider.resized();
 	},
